@@ -7,7 +7,7 @@ import java.util.Scanner;
 public class Reverse {
 
     public static void main(String[] args) {
-        Scanner in = new Scanner(System.in);
+        final Scanner in = new Scanner(System.in);
         List<List<Integer>> matrix = new ArrayList<>();
 
         while(in.hasNextLine()) {
