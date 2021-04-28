@@ -14,7 +14,7 @@ public class SumBigIntegerSpace {
         StringBuilder number = new StringBuilder();
         for (int i = 0; i < line.length(); i++) {
             char ch = line.charAt(i);
-            if (!(Character.getType(ch) == Character.SPACE_SEPARATOR)) {
+            if (Character.getType(ch) != Character.SPACE_SEPARATOR) {
                 if (ch == '-' && number.length() == 0) {
                     number.append('-');
                 } else if (Character.isDigit(ch)) {
