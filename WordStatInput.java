@@ -1,95 +1,57 @@
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.util.ArrayList;
-import java.util.Formatter;
-import java.util.List;
-import java.util.Scanner;
+import java.io.*;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
 
-public class WordStatInput {
+public class WordStat {
 
     public static void main(String[] args) {
-        String inputFileName = args[0];
-        String outputFileName = args[1];
-        Scanner in = null;
-        Formatter out = null;
+        final String inputFileName = args[0];
+        final String outputFileName = args[1];
 
         try {
-            in = new Scanner(new File(inputFileName));
-            out = new Formatter(new File(outputFileName));
-
-            List<WordAndQuantity> words = new ArrayList<>();
-
-            while (in.hasNextLine()) {
-                String line = in.nextLine().toLowerCase();
+            final BufferedReader in = new BufferedReader(new FileReader(new File(inputFileName), StandardCharsets.UTF_8));
+            try {
+                LinkedHashMap<String, Integer> words = new LinkedHashMap<>();
                 StringBuilder word = new StringBuilder();
-                for (int i = 0; i < line.length(); i++) {
-                    char ch = line.charAt(i);
-                    if (Character.isLetter(ch) || Character.getType(ch) == Character.DASH_PUNCTUATION || ch == '\'') {
-                        word.append(ch);
-                    } else if (word.length() > 0) {
-                        addWord(word, words);
-                        word.setLength(0);
+                char[] buffer = new char[1024];
+                int read = in.read(buffer);
+
+                while (read != -1) {
+                    String string = new String(buffer, 0, read).toLowerCase();
+                    read = in.read(buffer);
+                    addWordToList(string, word, words);
+                }
+
+                final Writer out = new OutputStreamWriter(new FileOutputStream(outputFileName), StandardCharsets.UTF_8);
+                try {
+                    for (Map.Entry<String, Integer> entry : words.entrySet()) {
+                        out.write(entry.getKey() + " " + entry.getValue() + "\n");
+
                     }
+                } finally {
+                    out.close();
                 }
+            } finally {
+                in.close();
+            }
+        } catch (IOException e) {
+            System.out.println("I/O error " + e.getMessage());
+        }
+    }
 
-                if (word.length() > 0) {
-                    addWord(word, words);
+    private static void addWordToList(String string, StringBuilder word, LinkedHashMap<String, Integer> words) {
+        for (int i = 0; i < string.length(); i++) {
+            char now = string.charAt(i);
+            if (Character.isLetter(now) || Character.getType(now) == Character.DASH_PUNCTUATION || now == '\'') {
+                word.append(now);
+            } else if (word.length() > 0) {
+                if (words.containsKey(word.toString())) {
+                    words.put(word.toString(), words.get(word.toString()) + 1);
+                } else {
+                    words.put(word.toString(), 1);
                 }
-            }
-
-            for (WordAndQuantity word : words) {
-                out.format(word.toString() + "\n");
-            }
-        } catch (FileNotFoundException e) {
-            System.out.println("File not found" + e.getMessage());
-        } finally {
-            assert in != null;
-            in.close();
-            assert out != null;
-            out.close();
-        }
-    }
-
-    private static boolean suchAWordAlreadyExists(String word, List<WordAndQuantity> words) {
-        for (WordAndQuantity wordAndQuantity : words) {
-            if (wordAndQuantity.word.equals(word)) {
-                return true;
+                word.setLength(0);
             }
         }
-
-        return false;
-    }
-
-    private static void addWord(StringBuilder word, List<WordAndQuantity> words) {
-        if (suchAWordAlreadyExists(word.toString(), words)) {
-            for (WordAndQuantity wordAndQuantity : words) {
-                wordAndQuantity.increaseTheQuantity(word.toString());
-            }
-        } else {
-            words.add(new WordAndQuantity(word.toString()));
-        }
-        word.setLength(0);
-    }
-}
-
-class WordAndQuantity {
-
-    public String word;
-    public int quantity;
-
-    public WordAndQuantity(String word) {
-        this.word = word;
-        this.quantity = 1;
-    }
-
-    public void increaseTheQuantity(String word) {
-        if (word.equals(this.word)) {
-            ++quantity;
-        }
-    }
-
-    @Override
-    public String toString() {
-        return word + " " + quantity;
     }
 }
